@@ -47,21 +47,21 @@ os.makedirs(test_dir)
 # path contains <img_id>.png. Annotation for an image with ID img_id is
 # <img_id>.ljson. So to get the path to the annotation ljson file, we need to
 # remove the .png extension and append the .ljson extension
-print(f'Copying {len(train_paths)} training images and {len(train_paths)} annotations from {data_dir} to {train_dir}...')
+print(f'Copying {len(train_paths)} [={train_frac}*{len(filepaths)}] training images and {len(train_paths)} annotations from {data_dir} to {train_dir}...')
 for path in tqdm(train_paths):
     img_id = os.path.basename(path[:-4])
     img_basename = img_id + '.png'
     annot_basename = img_id + '.ljson'
     shutil.copy(os.path.join(data_dir, img_basename), os.path.join(train_dir, img_basename))
     shutil.copy(os.path.join(data_dir, annot_basename), os.path.join(train_dir, annot_basename))
-print(f'Copying {len(valid_paths)} validation images and {len(valid_paths)} annotations from {data_dir} to {valid_dir}...')
+print(f'Copying {len(valid_paths)} [={valid_frac}*{len(filepaths)}] validation images and {len(valid_paths)} annotations from {data_dir} to {valid_dir}...')
 for path in tqdm(valid_paths):
     img_id = os.path.basename(path[:-4])
     img_basename = img_id + '.png'
     annot_basename = img_id + '.ljson'
     shutil.copy(os.path.join(data_dir, img_basename), os.path.join(valid_dir, img_basename))
     shutil.copy(os.path.join(data_dir, annot_basename), os.path.join(valid_dir, annot_basename))
-print(f'Copying {len(test_paths)} test images and {len(test_paths)} annotations from {data_dir} to {test_dir}...')
+print(f'Copying {len(test_paths)} [={test_frac}*{len(filepaths)}] test images and {len(test_paths)} annotations from {data_dir} to {test_dir}...')
 for path in tqdm(test_paths):
     img_id = os.path.basename(path[:-4])
     img_basename = img_id + '.png'
