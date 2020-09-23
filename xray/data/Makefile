@@ -10,11 +10,11 @@ train: split_data.py data_clean
 data_clean: COVID-19\ Radiography\ Database
 	bash generate_raw.sh
 
-# Removes train and test directories, retains data_clean.
+# Removes train, valid and test directories, retains data_clean.
 almost_clean:
-	rm -rf train test
+	rm -rf train valid test
 
 # Removes all generated directories.
 clean:
-	rm -rf train test
+	rm -rf train valid test
 	rm -rf data_clean

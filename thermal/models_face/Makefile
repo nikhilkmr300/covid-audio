@@ -1,7 +1,7 @@
 .SILENT:
 
 # Ensures that train, valid and test directories have been created in ../data.
-../train:
+../data/train:
 	cd ../data && make
 
 # Generates results of CNN model (cnn_predict.py) and writes images to
