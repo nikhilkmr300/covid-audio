@@ -5,16 +5,16 @@
 train: split_data.py data_clean
 	python3 split_data.py
 
-# Generates useful/cleaner form of data in "COVID-19 Radiograpy Database".
+# Generates useful/cleaner form of data in "KDD_paper_data".
 # Refer generate_data_clean.sh for more details.
-data_clean: COVID-19\ Radiography\ Database generate_data_clean.sh
+data_clean: generate_data_clean.sh KDD_paper_data
 	bash generate_data_clean.sh
 
-# Removes train, valid and test directories, retains data_clean.
-almost_clean:
-	rm -rf train valid test
+# Removes directories created for each class of audio sample, retains
+# data_clean.
+almost_clean: delete_audio_type_dirs.py
+	python3 delete_audio_type_dirs.py
 
 # Removes all generated directories.
 clean:
-	rm -rf train valid test
-	rm -rf data_clean
+	rm -rf data_*
