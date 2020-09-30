@@ -23,8 +23,8 @@ def generate_log_spectrogram(waveform, sampling_rate, samples_per_frame, hop_len
 
     return log_spec
 
-sampling_rate = 10000
-samples_per_frame = 512
+sampling_rate = 12000
+samples_per_frame = 256
 hop_length = samples_per_frame // 4
 
 print('Parameters for spectrograms (you can change these in generate_log_specs.py):')
