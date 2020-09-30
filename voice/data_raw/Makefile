@@ -1,8 +1,8 @@
 .SILENT:
 
-# Splits data_clean into train, valid and test. You can change the
-# train:valid:test split ratio in split_data.py.
-train: split_data.py data_clean
+# Splits data_clean into train, valid and test for each audio type. You can
+# change the train:valid:test split ratio in split_data.py.
+data_breath: split_data.py data_clean
 	python3 split_data.py
 
 # Generates useful/cleaner form of data in "KDD_paper_data".
@@ -17,4 +17,4 @@ almost_clean: delete_audio_type_dirs.py
 
 # Removes all generated directories.
 clean:
-	rm -rf data_*
+	rm -r data_*
