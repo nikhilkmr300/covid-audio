@@ -6,3 +6,4 @@ data_spec/log_spec/spec_*
 data_spec/mel_spec/spec_*
 eda/.ipynb_checkpoints
 eda/__pycache__
+feature_extraction/data_*
