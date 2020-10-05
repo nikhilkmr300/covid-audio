@@ -8,12 +8,12 @@ Refer [this](https://covid-19-sounds.org/en/blog/data_sharing.html) link for ins
 
 Once you have downloaded the dataset, move it to the `./data` directory. Then unzip all the zip files in the directory.
 
-To understand how to generate the spectrograms, skip to the Generating the spectrograms subsection below.
+For further details and instructions, read the following sections.
 
-### Understanding the data
+## Understanding the data
 Run `make` in `./data` to preprocess the data.
 This will generate several other directories with the data in a more organized form as required by this project.  
-* `data_clean`: Raw data in a more organized form.  
+* `data_clean`: Raw audio data in a more organized form.  
 * `data_<AUDIOTYPE>`: Data grouped by type of audio (breath, cough) and split into train, validation and test sets.
 
 Files are renamed in `data_clean` according to the convention `AUDIOTYPE_CLASS_isCoughSymptom_datasource_[uniqueID]_originalFileName`.  
@@ -21,18 +21,22 @@ Files are renamed in `data_clean` according to the convention `AUDIOTYPE_CLASS_i
 * CLASS: Class for the classification model -- asthma, covid, normal.  
 * isCoughSymptom: Whether the patient had cough as a symptom or not.  
 * datasource: Source of the data -- Android application, web application. 
-* originalFileName: Original name of the file as given in the raw data.  
 * uniqueID: Several files collected from the web application have the same names. Unique ID is to prevent overwriting on copying to `data_clean`.  
+* originalFileName: Original name of the file as given in the raw data.  
 
-### Generating the spectrograms
+## Generating the spectrograms
+We have used two kinds of spectrograms:
+* Log spectrograms: Frequency in log scale, amplitude in dB (using max value as reference)
+* Mel spectrograms: Frequency in mel scale, amplitude in dB (using max value as reference)
+
 To generate the log spectrograms, run `make` in `./data_spec/log_spec`. Similarly to generate the mel spectrograms, run `make` in `./data_spec/mel_spec`. 
 
 It uses the same train-valid-test split used in the `./data` directory. You need not have run `make` in `./data` and in case you haven't, it will automatically organize the data for you before generating the spectrograms. This can take some time.
 
-#### Exploratory data analysis
+## Exploratory data analysis
 The sub-directory `./eda` contains some exploratory data analysis on the training audio samples. The pickle files contain data on the distributions of features among the training audio samples, grouped by class (asthma, covid, normal).
 
-#### Feature extraction
+## Feature extraction
 Two-fold approach:  
 * Classical machine learning models using handcrafted audio features.
 * Neural network models using spectrogram images generated from the audio samples.
