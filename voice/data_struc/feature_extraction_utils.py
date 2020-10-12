@@ -22,12 +22,6 @@ agg_func_allowed = [
     # percentile value in arr. This too is not used in the KDD paper.
 ]
 
-sampling_rate = 12000
-samples_per_frame = 256
-hop_length = samples_per_frame // 4
-
-roll_percent = 0.85     # Percentage for spectral rolloff.
-
 # Function to aggregate frame-level/instantaneous features to 1 value for the
 # whole audio sample.
 def aggregate(arr, agg_func, rms=None):

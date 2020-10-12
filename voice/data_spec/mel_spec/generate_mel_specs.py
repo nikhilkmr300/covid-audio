@@ -11,13 +11,17 @@ import os
 
 import sys
 sys.path.append('..')
+sys.path.append('../..')
 
 import warnings
 warnings.filterwarnings('ignore')
 
+from set_audio_params import *
 from spec_utils import generate_waveform, generate_spectrogram, save_spectrogram
 
 def generate_mel_spectrogram(waveform, sampling_rate, samples_per_frame, hop_length, n_mels=128, window='hann'):
+    """ Generates spectrogram with mel scaled frequency axis and magnitude in decibels. """
+
     spec = generate_spectrogram(waveform, sampling_rate, samples_per_frame, hop_length, window=window)
     # Converting to decibels
     spec = librosa.power_to_db(spec, ref=np.max)
@@ -26,16 +30,6 @@ def generate_mel_spectrogram(waveform, sampling_rate, samples_per_frame, hop_len
     return mel_spec
 
 if __name__ == '__main__':
-    sampling_rate = 12000
-    samples_per_frame = 256
-    hop_length = samples_per_frame // 4
-    n_mels = 64
-
-    print('Parameters for spectrograms (you can change these in generate_mel_specs.py):')
-    print(f'\tsampling_rate={sampling_rate}Hz')
-    print(f'\tsamples_per_frame={samples_per_frame}')
-    print(f'\thop_length={hop_length}')
-
     # Currently audio types are breath and cough.
     audio_types = os.listdir('../../data_raw/data_clean')
 
@@ -50,7 +44,7 @@ if __name__ == '__main__':
         # Generating spectrograms for training audio samples.
         source_train = os.path.join('..', '..', 'data_raw', 'data_' + audio_type, 'train')
         dest_train = os.path.join('spec_' + audio_type, 'train')
-        print(f'Generating spectrograms for {audio_type}/train...')
+        print(f'Generating mel spectrograms for {audio_type}/train...')
         for dir in os.listdir(source_train):
             os.makedirs(os.path.join(dest_train, dir))
             # For each class (asthma, covid, normal).
@@ -65,7 +59,7 @@ if __name__ == '__main__':
         # Generating spectrograms for validation audio samples.
         source_valid = os.path.join('..', '..', 'data_raw', 'data_' + audio_type, 'valid')
         dest_valid = os.path.join('spec_' + audio_type, 'valid')
-        print(f'Generating spectrograms for {audio_type}/valid...')
+        print(f'Generating mel spectrograms for {audio_type}/valid...')
         for dir in os.listdir(source_valid):
             os.makedirs(os.path.join(dest_valid, dir))
             # For each class (asthma, covid, normal).
@@ -80,7 +74,7 @@ if __name__ == '__main__':
         # Generating spectrograms for test audio samples.
         source_test = os.path.join('..', '..', 'data_raw', 'data_' + audio_type, 'test')
         dest_test = os.path.join('spec_' + audio_type, 'test')
-        print(f'Generating spectrograms for {audio_type}/test...')
+        print(f'Generating mel spectrograms for {audio_type}/test...')
         for dir in os.listdir(source_test):
             os.makedirs(os.path.join(dest_test, dir))
             # For each class (asthma, covid, normal).

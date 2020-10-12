@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import librosa
 import os
 
-def generate_waveform(audio_path, sampling_rate=44100):
+def generate_waveform(audio_path, sampling_rate):
     """ Returns the audio sample as a NumPy array, along with the sampling rate. """
 
     # Standard sampling rate is 44100 Hz.

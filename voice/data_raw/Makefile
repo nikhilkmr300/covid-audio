@@ -17,4 +17,4 @@ almost_clean: delete_audio_type_dirs.py
 
 # Removes all generated directories.
 clean:
-	rm -r data_*
+	rm -rf data_*

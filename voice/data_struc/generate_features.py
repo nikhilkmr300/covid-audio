@@ -10,8 +10,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import sys
-sys.path.append('../eda')
+sys.path.append('..')
 
+from set_audio_params import *
 from feature_extraction_utils import *
 
 # Types of audio (currently breath and cough).
@@ -102,6 +103,8 @@ def generate_feature_row(orig_df, filename, waveform, features, sampling_rate, s
 
     return row_df
 
+print_params()
+
 for audio_type in audio_types:
     # Paths to train, valid and test directories for each audio type.
     source_train = os.path.join('..', 'data_raw', 'data_' + audio_type, 'train')
@@ -126,7 +129,7 @@ for audio_type in audio_types:
         class_ = os.path.basename(dir)
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
-            waveform, _ = librosa.load(file)
+            waveform, _ = librosa.load(file, sr=sampling_rate)
 
             # Row of features corresponding to 1 audio sample.
             row_df = generate_feature_row(train_df, os.path.basename(file), waveform, features, sampling_rate, samples_per_frame, hop_length)
@@ -143,7 +146,7 @@ for audio_type in audio_types:
         class_ = os.path.basename(dir)
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
-            waveform, _ = librosa.load(file)
+            waveform, _ = librosa.load(file, sr=sampling_rate)
 
             # Row of features corresponding to 1 audio sample.
             row_df = generate_feature_row(train_df, os.path.basename(file), waveform, features, sampling_rate, samples_per_frame, hop_length)
@@ -160,7 +163,7 @@ for audio_type in audio_types:
         class_ = os.path.basename(dir)
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
-            waveform, _ = librosa.load(file)
+            waveform, _ = librosa.load(file, sr=sampling_rate)
 
             # Row of features corresponding to 1 audio sample.
             row_df = generate_feature_row(train_df, os.path.basename(file), waveform, features, sampling_rate, samples_per_frame, hop_length)

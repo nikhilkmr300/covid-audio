@@ -6,10 +6,10 @@
 
 # Generates results of CNN model (cnn_predict.py) and writes images to
 # ../results_face/results_cnn.
-cnn: ../train
+cnn: ../data/train
 	python3 cnn_predict.py
 
 # Generates results of HOG+SVM model (hog_predict.py) and writes images to
 # ../results_face/results_hog.
-hog: ../train
+hog: ../data/train
 	python3 hog_predict.py

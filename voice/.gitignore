@@ -1,9 +1,11 @@
+__pycache__
 data_raw/KDD_paper_data
 data_raw/data_*
+data_rnn/.ipynb_checkpoints
 data_spec/__pycache__
-data_spec/log_spec/__pycache__
 data_spec/log_spec/spec_*
 data_spec/mel_spec/spec_*
+data_struc/data_*
 eda/.ipynb_checkpoints
 eda/__pycache__
 feature_extraction/data_*
