@@ -1,5 +1,5 @@
 # voice
-This is the sub-directory for the approach using x-ray images.
+This is the sub-directory for the approach using audio data.
 
 ## Instructions
 The data has not been uploaded to this repository.
