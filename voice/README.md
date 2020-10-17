@@ -10,10 +10,11 @@ Once you have downloaded the dataset, move it to the `./data` directory. Then un
 
 Run any of the following commands, depending on what data you want to generate:
 * `make all`: Generates everything that is required. If you are unsure of which option to use, use this, or just run `make`.  
-* `make data_raw`: Generates audio samples in a more organized form, split into train, validation and test sets.  
-* `make data_rnn`: Generates data in the form required by recurrent neural network models.  
-* `make data_spec`: Generates spectrograms.  
-* `make data_struc`: Generates csv files containing handcrafted features to pass to traditional ML models.
+* `make raw`: Generates audio samples in a more organized form, split into train, validation and test sets.  
+* `make rnn`: Generates data in the form required by recurrent neural network models.  
+* `make spec`: Generates spectrograms.  
+* `make struc`: Generates csv files containing handcrafted features to pass to traditional ML models.
+For other targets, refer `Makefile` in the `voice` directory.
 
 For further details and instructions, read the following sections.
 
@@ -34,10 +35,9 @@ For further details and instructions, read the following sections.
 * `data_spec`: Contains log and mel spectrograms.  
 * `data_struc`: Contains data with handcrafted features aggregated over the audio sample, in a structured format (csv), to pass into a traditional ML model.  
 * `eda`: Contains some exploratory data analysis on the data.  
-* `set_audio_params.py`: Sets the parameters (such as sampling rate and number of samples in a frame) for the whole project. Make sure you run `make all` after editing any parameters in this file, for the changes to take effect.  
+* `set_audio_params.py`: Sets the hyperparameters such as sampling rate and number of samples in a frame. Make sure you run `make all` after editing any hyperparameters in this file, for the changes to take effect. Refer this file for more details on what hyperparameters can be tweaked.
 
 ## Filename convention
-
 Files are renamed in `data_clean` according to the convention `AUDIOTYPE_CLASS_isCoughSymptom_datasource_[uniqueID]_originalFileName`.  
 * AUDIOTYPE: Type of audio data –– breath, cough.  
 * CLASS: Class for the classification model  asthma, covid, normal.  
@@ -47,7 +47,7 @@ Files are renamed in `data_clean` according to the convention `AUDIOTYPE_CLASS_i
 * originalFileName: Original name of the file as given in the raw data.  
 
 ## Recurrent models
-TODO
+Data fed to a Keras RNN requires the shape `[num_samples, num_timesteps, num_features]`. Running `make rnn` generates train, validation and test data with this shape as `.npy` files.
 
 ## Spectrograms
 We have used two kinds of spectrograms:
@@ -55,7 +55,7 @@ We have used two kinds of spectrograms:
 * Mel spectrograms: Frequency in mel scale, amplitude in dB (using max value as reference)
 
 ## Feature extraction
-We extract handcrafted features from the audio data for the recurrent models and traditional ML models.
+We extract handcrafted features from the audio data for the recurrent models and traditional ML models. These are present in the `data_struc` directory as csv files.
 
 Audio features come in two types:  
 * Instantaneous: Extracted for each frame in an audio sample.
@@ -64,6 +64,3 @@ Audio features come in two types:
 For the recurrent models, we use only the instantaneous features, to preserve the time-ordering. (Global features do not contain any time-related information, as they are taken over the complete audio sample.)
 
 For the traditional ML models, we use global and aggregated instantaneous features, so time-ordering is not preserved. We need representations of the instantaneous features (calculated over each frame) over the whole audio sample. So we use aggregate statistics to summarize the instantaneous features over the whole audio sample. You can change which features to use and the statistics used to aggregate the instantaneous features in `./feature_extraction/generate_features.py`.
-
-## Exploratory data analysis
-The sub-directory `./eda` contains some exploratory data analysis on the training audio samples. The pickle files contain data on the distributions of features among the training audio samples, grouped by class (asthma, covid, normal).
