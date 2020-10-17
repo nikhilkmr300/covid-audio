@@ -15,7 +15,7 @@ raw:
 
 # Generates data as required by RNN models in data_rnn.
 rnn:
-	cd data_rnn && make target
+	cd data_rnn && make
 
 # Generates spectrograms as required by convolutional models in data_spec.
 spec:
