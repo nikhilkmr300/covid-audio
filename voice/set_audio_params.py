@@ -5,16 +5,29 @@
 import numpy as np
 import librosa
 
-# Common parameters
+# Common parameters across ALL models
 sampling_rate = 16000
 samples_per_frame = 256
 hop_length = samples_per_frame // 4
+# Looping/clipping breath audio samples to the same length time_per_sample (in
+# seconds). Refer eda/eda_audio_len.ipynb for stats on audio sample times.
+time_per_sample_breath = 24.29  # 95th percentile value for breath.
+time_per_sample_cough = 9.92    # 95th percentile value for cough.
 
-# Spectrogram parameters
+# Parameters for SPECTROGRAM models (CNNs) -- data_spec directory
 n_mels = 64
 
-# Feature specific parameters
-roll_percent = 0.85     # Percentage for spectral rolloff.
+# Parameters for TRADITIONAL ML models -- data_struc directory
+struc_global_features = []            # Global features need not be aggregated for an audio sample.
+struc_instantaneous_features = ['rmse', 'zcr', 'sc', 'sb', 'sr', 'mfcc']   # Instantaneous features need to be aggregated for an audio sample.
+struc_agg_funcs = ['mean', 'median', 'rms', 'max', 'min', 'rewm']    # Aggregation functions to use. Refer to data_struc/feature_extraction_utils.py for allowed aggregate functions.
+struc_roll_percent = 0.85       # Percentage for spectral rolloff.
+struc_n_mfcc = 13               # Number of MFCC coefficients to consider.
+
+# Parameters for RECURRENT models -- data_rnn directory
+rnn_instantaneous_features = ['rmse', 'zcr', 'sc', 'sb', 'sr', 'mfcc']   # Using only instantaneous features, without aggregation to preserve time component for RNN. Global features not used.
+rnn_roll_percent = 0.85         # Percentage for spectral rolloff.
+rnn_n_mfcc = 13                 # Number of MFCC coefficients to consider.
 
 def print_params():
     print('Parameters for audio (you can change these in set_audio_params.py):')

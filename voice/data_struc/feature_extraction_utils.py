@@ -1,9 +1,14 @@
+# Utilities for handling instantaneous, global and aggregate instantaneous
+# audio features generated from the audio files in data_clean. Features are
+# extracted after the audio samples are changed to the same length, i.e.,
+# time_per_sample, refer to set_audio_params.py.
+
 import numpy as np
 import scipy.stats
 import librosa
 
 # Aggregate functions taken in the KDD paper.
-agg_func_allowed = [
+agg_funcs_allowed = [
     'mean',     # Arithmetic mean
     'median',   # Median
     'rms',      # Root mean square value
@@ -11,12 +16,12 @@ agg_func_allowed = [
     'min',      # Minimum
     'q1',       # 1st quartile
     'q3',       # 3rd quartile
-    'iqr',       # Interquartile range
+    'iqr',      # Interquartile range
     'std',      # Standard deviation
     'skew',     # Skewness
-    'kurtosis',  # Kurtosis
-    'rms_energy_weighted_mean'  # A custom aggregation function not given in the
-                                #   KDD paper.
+    'kurtosis', # Kurtosis
+    'rewm'      # A custom aggregation function rms energy weighted mean, not
+                # given in the KDD paper.
     # Integer values in the range [0, 100] are also allowed, representing the
     # percentile value in arr. For example, passing 95 would return the 95th
     # percentile value in arr. This too is not used in the KDD paper.
@@ -25,8 +30,8 @@ agg_func_allowed = [
 # Function to aggregate frame-level/instantaneous features to 1 value for the
 # whole audio sample.
 def aggregate(arr, agg_func, rms=None):
-    if not (agg_func in agg_func_allowed or (type(agg_func) is int and (0 <= agg_func <= 100))):
-        raise ValueError(f'agg_func must be one among {agg_func_allowed} or an integer in the range [0, 100].')
+    if not (agg_func in agg_funcs_allowed or (type(agg_func) is int and (0 <= agg_func <= 100))):
+        raise ValueError(f'agg_func must be one among {agg_funcs_allowed} or an integer in the range [0, 100].')
     if arr.ndim != 1 and arr.ndim != 2:
         raise ValueError(f'arr must be a tensor of rank 1.')
 
@@ -85,13 +90,11 @@ def aggregate(arr, agg_func, rms=None):
         if arr.ndim == 2:
             return scipy.stats.kurtosis(arr, axis=1)
         return scipy.stats.kurtosis(arr)
-    elif agg_func == 'rms_energy_weighted_mean':
+    elif agg_func == 'rewm':
         # Using this option requires RMS energy vector.
         if rms is None:
             raise ValueError('aggregate with agg_func as rms_energy_weighted_mean requires rms parameter.')
-        # arr and rms need to have the same shape for dot product to be valid.
-        assert rms.shape == arr.shape
-        # Handles case of MFCC matrix as well.
+        # Handles case of MFCC matrix as well, which has shape (struc_n_mfcc, num_frames).
         return np.dot(arr, rms) / np.sum(rms)
     elif type(agg_func) is int and 0 <= agg_func <= 100:
         # For MFCCs, calculating across time, axis=1.
@@ -101,10 +104,10 @@ def aggregate(arr, agg_func, rms=None):
 
 # INSTANTANEOUS FEATURES
 # Wrappers around librosa functions that:
-# 1. Use more intuitive names
-# 2. Convert optional arguments to optional arguments. I've spent too much time
-#    debugging before just to realize later that I hadn't provided an optional
-#    argument that was required to generate a desired result.
+# 1. Use more intuitive names.
+# 2. Convert optional arguments to compulsory arguments. I've spent too much
+#    time debugging before just to realize later that I hadn't provided an
+#    optional argument that was required to generate a desired result.
 # 3. Get rid of distracting options not required by this project.
 def rms_energy(waveform, samples_per_frame, hop_length):
     return librosa.feature.rms(y=waveform, frame_length=samples_per_frame, hop_length=hop_length).flatten()
@@ -133,85 +136,95 @@ def d2mfcc(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc):
     return librosa.feature.delta(mfcc, order=2)
 
 # AGGREGATE INSTANTANEOUS FEATURES
-def rms_energy_agg(waveform, samples_per_frame, hop_length, agg_func=95):
+# Note that aggregate function 'rewm' requires slightly different treatment (it
+# requires the root mean square energies rms to be passed to the aggregate
+# function), because of the definition of 'rewm'.
+def rms_energy_agg(waveform, samples_per_frame, hop_length, agg_func=95, rms=None):
     """ Returns aggregate of framewise RMS energies, for an audio clip. """
+    rms_energies = rms_energy(waveform, samples_per_frame, hop_length)
+    if agg_func == 'rewm':
+        # Using RMS energy to weight frames. Frames with higher RMS energy
+        # contribute more to aggregate rms energy.
+        # I don't know if it makes sense to weight rms energy with rms energy
+        # to aggregate it, it'd just be squaring the rms energies over the
+        # frames, and taking their mean. Keeping it for the sake of consistency.
+        # If required, it can be removed from the csv files.
+        return aggregate(rms_energies, agg_func, rms=rms)
+    return aggregate(rms_energies, agg_func)
 
-    rms = rms_energy(waveform, samples_per_frame, hop_length)
-    return aggregate(rms, agg_func)
-
-def zero_crossing_rate_agg(waveform, samples_per_frame, hop_length, agg_func):
+def zero_crossing_rate_agg(waveform, samples_per_frame, hop_length, agg_func, rms=None):
     """ Returns aggregate of framewise zero crossing rates, for an audio clip. """
 
     zcr = zero_crossing_rate(waveform, samples_per_frame, hop_length)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
         rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(zcr, agg_func, rms=rms)
     return aggregate(zcr, agg_func)
 
-def spectral_centroid_agg(waveform, sampling_rate, samples_per_frame, hop_length, agg_func):
+def spectral_centroid_agg(waveform, sampling_rate, samples_per_frame, hop_length, agg_func, rms=None):
     """ Returns aggregate of spectral centroids, for an audio clip. """
 
     spec_centroids = spectral_centroid(waveform, sampling_rate, samples_per_frame, hop_length)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
         rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(spec_centroids, agg_func, rms=rms)
     return aggregate(spec_centroids, agg_func)
 
-def spectral_bandwidth_agg(waveform, sampling_rate, samples_per_frame, hop_length, agg_func):
+def spectral_bandwidth_agg(waveform, sampling_rate, samples_per_frame, hop_length, agg_func, rms=None):
     """ Returns aggregate of framewise spectral bandwidths, for an audio clip. """
 
     spec_bws = spectral_bandwidth(waveform, sampling_rate, samples_per_frame, hop_length)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
         rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(spec_bws, agg_func, rms=rms)
     return aggregate(spec_bws, agg_func)
 
-def spectral_rolloff_agg(waveform, sampling_rate, samples_per_frame, hop_length, roll_percent, agg_func):
+def spectral_rolloff_agg(waveform, sampling_rate, samples_per_frame, hop_length, roll_percent, agg_func, rms=None):
     """ Returns aggregate of framewise spectral rolloffs, for an audio clip. """
 
     spec_rolloffs = spectral_rolloff(waveform, sampling_rate, samples_per_frame, hop_length, roll_percent)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
-        rms = rms_energy(spec_rolloffs, samples_per_frame, hop_length)
+        rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(spec_rolloffs, agg_func, rms=rms)
     return aggregate(spec_rolloffs, agg_func)
 
-def mfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc, agg_func):
+def mfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc, agg_func, rms=None):
     """ Returns aggregate across time axis (axis=1) of MFCCs, for an audio clip. """
 
     mfccs = mfcc(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
-        rms = rms_energy(mfccs, samples_per_frame, hop_length)
+        rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(mfccs, agg_func, rms=rms)
     return aggregate(mfccs, agg_func)
 
-def dmfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc, agg_func):
+def dmfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc, agg_func, rms=None):
     """ Returns aggregate across time axis (axis=1) of derivative of MFCCs, for an audio clip. """
 
     dmfccs = dmfcc(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
-        rms = rms_energy(dmfccs, samples_per_frame, hop_length)
+        rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(dmfccs, agg_func, rms=rms)
     return aggregate(dmfccs, agg_func)
 
-def d2mfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc, agg_func):
+def d2mfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc, agg_func, rms=None):
     """ Returns aggregate across time axis (axis=1) of second derivative of MFCCs, for an audio clip. """
 
     d2mfccs = d2mfcc(waveform, sampling_rate, samples_per_frame, hop_length, n_mfcc)
-    if agg_func == 'rms_energy_weighted_mean':
+    if agg_func == 'rewm':
         # Using RMS energy to weight frames. Frames with higher RMS energy
         # contribute more to aggregate zero crossing rate.
-        rms = rms_energy(d2mfccs, samples_per_frame, hop_length)
+        rms = rms_energy(waveform, samples_per_frame, hop_length)
         return aggregate(d2mfccs, agg_func, rms=rms)
     return aggregate(d2mfccs, agg_func)

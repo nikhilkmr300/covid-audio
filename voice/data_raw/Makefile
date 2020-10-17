@@ -12,7 +12,7 @@ data_clean: generate_data_clean.sh KDD_paper_data
 
 # Removes directories created for each class of audio sample, retains
 # data_clean.
-almost_clean: delete_audio_type_dirs.py
+mostly_clean:
 	python3 delete_audio_type_dirs.py
 
 # Removes all generated directories.

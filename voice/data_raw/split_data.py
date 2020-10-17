@@ -1,3 +1,7 @@
+# Script to split data into train, validation and test sets in directory
+# data_clean. Audio files in data_clean remain the same as the original data,
+# they are only copied without change to from KDD_paper_data to data_clean.
+
 import numpy as np
 import random
 import os
