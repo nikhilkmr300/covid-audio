@@ -116,6 +116,8 @@ def save_spectrogram(spec, hop_length, output_path, x_axis='time', y_axis='log',
     """ Saves spectrogram to disk. """
 
     fig = plt.figure()
+    plt.style.use('dark_background')
+    plt.suptitle(title)
     librosa.display.specshow(spec, hop_length=hop_length, x_axis=x_axis, y_axis=y_axis)
     plt.gca().set_axis_off()
     plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, hspace = 0, wspace = 0)
