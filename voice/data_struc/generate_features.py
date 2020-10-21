@@ -37,7 +37,7 @@ if 'mfcc' in struc_instantaneous_features:
 struc_instantaneous_features.remove('mfcc')
 
 # Generating feature names for struc_instantaneous_features x struc_agg_funcs.
-struc_instantaneous_features_agg = [instantaneous_feature + '_' + agg_func for instantaneous_feature, agg_func in itertools.product(struc_instantaneous_features, struc_agg_funcs)]
+struc_instantaneous_features_agg = [instantaneous_feature + '_' + str(agg_func) for instantaneous_feature, agg_func in itertools.product(struc_instantaneous_features, struc_agg_funcs)]
 
 print(f'Using {len(struc_instantaneous_features)} instantaneous features (IF):')
 [print(instantaneous_feature, end='\t') for instantaneous_feature in struc_instantaneous_features]
@@ -57,7 +57,7 @@ print()
 # All features
 features = struc_instantaneous_features_agg + struc_global_features
 
-def generate_feature_row(orig_df, filename, waveform, features, sampling_rate, samples_per_frame, hop_length):
+def generate_feature_row(orig_df, filename, class_, waveform, sampling_rate, samples_per_frame, hop_length):
     """ Returns a row of features as a Pandas DataFrame. """
 
     # row_df will be appended to orig_df, hence must have same columns.
@@ -69,7 +69,7 @@ def generate_feature_row(orig_df, filename, waveform, features, sampling_rate, s
     # not rewm, rms is ignored.
     rms = rms_energy(waveform, samples_per_frame, hop_length)
 
-    for feature in features:
+    for feature in row_df.columns:
         # Instantaneous aggregate features contain '_' as substring.
         if '_' in feature:
             feature_name, agg_func = feature.split('_')
@@ -88,6 +88,9 @@ def generate_feature_row(orig_df, filename, waveform, features, sampling_rate, s
             elif 'mfcc' in feature_name:
                 continue
 
+        elif feature == 'target':
+            row_df[filename, feature] = class_
+
         # Global features.
         else:
             # No global features yet.
@@ -103,7 +106,7 @@ def generate_feature_row(orig_df, filename, waveform, features, sampling_rate, s
         # Vector of mfcc_max_coef number of MFCCs.
         mfcc_vec = mfcc_agg(waveform, sampling_rate, samples_per_frame, hop_length, struc_n_mfcc, agg_func, rms=rms)
         for i in range(1, struc_n_mfcc + 1):
-            row_df.loc[filename, 'mfcc' + str(i) + '_' + agg_func] = mfcc_vec[i - 1]
+            row_df.loc[filename, 'mfcc' + str(i) + '_' + str(agg_func)] = mfcc_vec[i - 1]
 
     return row_df
 
@@ -148,11 +151,11 @@ for audio_type in sorted(audio_types):
     dest_test = os.path.join('data_' + audio_type, 'test.csv')
 
     # Train, validation and test dataframes containing handcrafted features.
-    train_df = pd.DataFrame(columns=features + ['filename'])
+    train_df = pd.DataFrame(columns=features + ['filename', 'target'])
     train_df = train_df.set_index('filename')
-    valid_df = pd.DataFrame(columns=features + ['filename'])
+    valid_df = pd.DataFrame(columns=features + ['filename', 'target'])
     valid_df = valid_df.set_index('filename')
-    test_df = pd.DataFrame(columns=features + ['filename'])
+    test_df = pd.DataFrame(columns=features + ['filename', 'target'])
     test_df = test_df.set_index('filename')
 
     print(f'Generating train.csv for audio_type={audio_type}...')
@@ -160,6 +163,11 @@ for audio_type in sorted(audio_types):
         dir = os.path.join(source_train, dir)
         class_ = os.path.basename(dir)
 
+        # Ignoring class asthma.
+        if class_ == 'asthma':
+            print('Ignoring class=asthma.')
+            continue
+
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
 
@@ -169,14 +177,13 @@ for audio_type in sorted(audio_types):
                 waveform, _ = load(file, sampling_rate, time_per_sample_cough)
 
             # Row of features corresponding to 1 audio sample.
-            row_df = generate_feature_row(train_df, os.path.basename(file), waveform, features, sampling_rate, samples_per_frame, hop_length)
+            row_df = generate_feature_row(train_df, os.path.basename(file), class_, waveform, sampling_rate, samples_per_frame, hop_length)
 
             # Appending new row to dataframe.
             train_df = train_df.append(row_df)
 
     # Adding is_cough_symptom and target values using filename.
     train_df['is_cough_symptom'] = train_df.index.to_series().apply(add_is_cough_symptom)
-    train_df['target'] = train_df.index.to_series().apply(add_target)
 
     # Saving dataframe to disk.
     train_df.to_csv(dest_train)
@@ -184,8 +191,13 @@ for audio_type in sorted(audio_types):
     print(f'Generating valid.csv for audio_type={audio_type}...')
     for dir in sorted(os.listdir(source_valid)):
         dir = os.path.join(source_valid, dir)
-
         class_ = os.path.basename(dir)
+
+        # Ignoring class asthma.
+        if class_ == 'asthma':
+            print('Ignoring class=asthma.')
+            continue
+
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
 
@@ -195,14 +207,13 @@ for audio_type in sorted(audio_types):
                 waveform, _ = load(file, sampling_rate, time_per_sample_cough)
 
             # Row of features corresponding to 1 audio sample.
-            row_df = generate_feature_row(train_df, os.path.basename(file), waveform, features, sampling_rate, samples_per_frame, hop_length)
+            row_df = generate_feature_row(valid_df, os.path.basename(file), class_, waveform, sampling_rate, samples_per_frame, hop_length)
 
             # Appending new row to dataframe.
             valid_df = valid_df.append(row_df)
 
     # Adding is_cough_symptom and target values using filename.
     valid_df['is_cough_symptom'] = valid_df.index.to_series().apply(add_is_cough_symptom)
-    valid_df['target'] = valid_df.index.to_series().apply(add_target)
 
     # Saving dataframe to disk.
     valid_df.to_csv(dest_valid)
@@ -212,6 +223,11 @@ for audio_type in sorted(audio_types):
         dir = os.path.join(source_test, dir)
         class_ = os.path.basename(dir)
 
+        # Ignoring class asthma.
+        if class_ == 'asthma':
+            print('Ignoring class=asthma.')
+            continue
+
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
 
@@ -221,14 +237,13 @@ for audio_type in sorted(audio_types):
                 waveform, _ = load(file, sampling_rate, time_per_sample_cough)
 
             # Row of features corresponding to 1 audio sample.
-            row_df = generate_feature_row(train_df, os.path.basename(file), waveform, features, sampling_rate, samples_per_frame, hop_length)
+            row_df = generate_feature_row(test_df, os.path.basename(file), class_, waveform, sampling_rate, samples_per_frame, hop_length)
 
             # Appending new row to dataframe.
             test_df = test_df.append(row_df)
 
     # Adding is_cough_symptom and target values using filename.
     test_df['is_cough_symptom'] = test_df.index.to_series().apply(add_is_cough_symptom)
-    test_df['target'] = test_df.index.to_series().apply(add_target)
 
     # Saving dataframe to disk.
     test_df.to_csv(dest_test)

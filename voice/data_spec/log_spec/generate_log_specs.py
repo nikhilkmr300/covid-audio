@@ -46,6 +46,11 @@ if __name__ == '__main__':
         dest_train = os.path.join('spec_' + audio_type, 'train')
         print(f'Generating log spectrograms for {audio_type}/train...')
         for dir in sorted(os.listdir(source_train)):
+            # Ignoring class asthma.
+            if ignore_asthma == True and dir == 'asthma':
+                print('Ignoring class=asthma.')
+                continue
+
             os.makedirs(os.path.join(dest_train, dir))
             # For each class (asthma, covid, normal).
             for file in tqdm(sorted(os.listdir(os.path.join(source_train, dir))), desc=f'class={dir}'):
@@ -65,6 +70,11 @@ if __name__ == '__main__':
         dest_valid = os.path.join('spec_' + audio_type, 'valid')
         print(f'Generating log spectrograms for {audio_type}/valid...')
         for dir in sorted(os.listdir(source_valid)):
+            # Ignoring class asthma.
+            if ignore_asthma == True and dir == 'asthma':
+                print('Ignoring class=asthma.')
+                continue
+
             os.makedirs(os.path.join(dest_valid, dir))
             # For each class (asthma, covid, normal).
             for file in tqdm(sorted(os.listdir(os.path.join(source_valid, dir))), desc=f'class={dir}'):
@@ -84,6 +94,11 @@ if __name__ == '__main__':
         dest_test = os.path.join('spec_' + audio_type, 'test')
         print(f'Generating log spectrograms for {audio_type}/test...')
         for dir in sorted(os.listdir(source_test)):
+            # Ignoring class asthma.
+            if ignore_asthma == True and dir == 'asthma':
+                print('Ignoring class=asthma.')
+                continue
+
             os.makedirs(os.path.join(dest_test, dir))
             # For each class (asthma, covid, normal).
             for file in tqdm(sorted(os.listdir(os.path.join(source_test, dir))), desc=f'class={dir}'):

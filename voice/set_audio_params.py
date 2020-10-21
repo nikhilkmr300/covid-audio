@@ -5,6 +5,11 @@
 import numpy as np
 import librosa
 
+# Set to True to ignore class asthma for data_rnn, data_spec and data_struc.
+# Note that however, for data_raw, data_clean and eda, class asthma samples
+# will still be used.
+ignore_asthma = True
+
 # Common parameters across ALL models
 sampling_rate = 16000
 samples_per_frame = 256
@@ -19,8 +24,26 @@ n_mels = 64
 
 # Parameters for TRADITIONAL ML models -- data_struc directory
 struc_global_features = []            # Global features need not be aggregated for an audio sample.
-struc_instantaneous_features = ['rmse', 'zcr', 'sc', 'sb', 'sr', 'mfcc']   # Instantaneous features need to be aggregated for an audio sample.
-struc_agg_funcs = ['mean', 'median', 'rms', 'max', 'min', 'rewm']    # Aggregation functions to use. Refer to data_struc/feature_extraction_utils.py for allowed aggregate functions.
+struc_instantaneous_features = ['rmse',
+                                'zcr',
+                                'sc',
+                                'sb',
+                                'sr',
+                                'mfcc']   # Instantaneous features need to be aggregated for an audio sample.
+struc_agg_funcs = [             'mean',
+                                'median',
+                                'rms',
+                                'max',
+                                'min',
+                                # 'q1',
+                                # 'q3',
+                                # '10',
+                                # '90',
+                                # 'iqr',
+                                # 'std',
+                                # 'skew',
+                                # 'kurtosis',
+                                'rewm']    # Aggregation functions to use. Refer to data_struc/feature_extraction_utils.py for allowed aggregate functions.
 struc_roll_percent = 0.85       # Percentage for spectral rolloff.
 struc_n_mfcc = 13               # Number of MFCC coefficients to consider.
 

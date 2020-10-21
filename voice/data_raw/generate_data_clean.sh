@@ -5,7 +5,6 @@
 # Instructions for obtaining the academic license are at the link below:
 # https://covid-19-sounds.org/en/blog/data_sharing.html
 # Then unzip all the zip files in KDD_paper_data.
-# Do NOT correct the typo in the directory name healthywenwithcough.
 
 # This script reorganizes the data in KDD_paper_data into a more logical form.
 
@@ -199,7 +198,7 @@ for subdir in ./KDD_paper_data/covidwebnocough/*; do
 done
 # Normal, reported cough as symptom.
 echo -e "\tCopying normal (cough symptom) breath+cough files to data_clean/*/normal..."
-for subdir in ./KDD_paper_data/healthywenwithcough/*; do
+for subdir in ./KDD_paper_data/healthywebwithcough/*; do
   for file in $subdir/*; do
     # Filename contains breath as substring, copying to data_clean/breath/covid.
     if grep -q breath <<< $file; then

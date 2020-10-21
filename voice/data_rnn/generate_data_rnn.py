@@ -18,6 +18,16 @@ from load_utils import *
 from feature_extraction_utils import *
 
 def generate_feature_matrix(waveform):
+    """
+    Generates feature matrix of shape [num_samples, num_timesteps, num_features]
+
+    Parameters:
+    waveform (NumPy array): Audio waveform.
+
+    Returns:
+    NumPy array (ndim=3): Feature matrix.
+    """
+
     # Output after framing has shape:
     # floor((audio_length + 2 * pad_length - frame_length) / hop_length) + 1
     # Librosa takes pad_length = floor(frame_length / 2).
@@ -88,20 +98,40 @@ for audio_type in sorted(audio_types):
     source_valid = os.path.join('..', 'data_raw', 'data_' + audio_type, 'valid')
     source_test = os.path.join('..', 'data_raw', 'data_' + audio_type, 'test')
     # Paths to destination files.
-    dest_train = os.path.join('data_' + audio_type, 'train.npy')
-    dest_valid = os.path.join('data_' + audio_type, 'valid.npy')
-    dest_test = os.path.join('data_' + audio_type, 'test.npy')
+    dest_train_X = os.path.join('data_' + audio_type, 'train_X.npy')
+    dest_train_y = os.path.join('data_' + audio_type, 'train_y.npy')
+    dest_valid_X = os.path.join('data_' + audio_type, 'valid_X.npy')
+    dest_valid_y = os.path.join('data_' + audio_type, 'valid_y.npy')
+    dest_test_X = os.path.join('data_' + audio_type, 'test_X.npy')
+    dest_test_y = os.path.join('data_' + audio_type, 'test_y.npy')
 
     # Input to RNN should have shape [num_samples, num_timesteps, num_features].
-    train = list()
-    valid = list()
-    test = list()
+    train_X = list()
+    valid_X = list()
+    test_X = list()
 
-    print(f'Generating train.npy for audio_type={audio_type}...')
+    # Targets corresponding to train, validation and test audio samples.
+    train_y = list()
+    valid_y = list()
+    test_y = list()
+
+    print(f'Generating train_X.npy and train_y.npy for audio_type={audio_type}...')
     for i, dir in enumerate(sorted(os.listdir(source_train))):
         dir = os.path.join(source_train, dir)
         class_ = os.path.basename(dir)
 
+        # Ignoring class asthma.
+        if ignore_asthma == True and class_ == 'asthma':
+            print('Ignoring class=asthma.')
+            continue
+
+        # Adding targets right here and not in the nested for loop below as we
+        # are iterating classwise anyway.
+        if class_ == 'covid':
+            train_y.extend([1] * len(os.listdir(dir)))
+        elif class_ == 'asthma' or class_ == 'normal':
+            train_y.extend([0] * len(os.listdir(dir)))
+
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
 
@@ -111,16 +141,35 @@ for audio_type in sorted(audio_types):
                 waveform, _ = load(file, sampling_rate, time_per_sample_cough)
 
             feature_matrix = generate_feature_matrix(waveform)
-            train.append(feature_matrix)
+            train_X.append(feature_matrix)
 
-    train = np.array(train)
-    np.save(dest_train, train)
+    train_X = np.array(train_X)
+    train_y = np.array(train_y)
 
-    print(f'Generating valid.npy for audio_type={audio_type}...')
+    # Sanity check that number of samples in feature matrix and target vector
+    # are the same.
+    assert train_X.shape[0] == train_y.shape[0]
+
+    np.save(dest_train_X, train_X)
+    np.save(dest_train_y, train_y)
+
+    print(f'Generating valid_X.npy and valid_y.npy for audio_type={audio_type}...')
     for i, dir in enumerate(sorted(os.listdir(source_valid))):
         dir = os.path.join(source_valid, dir)
         class_ = os.path.basename(dir)
 
+        # Ignoring class asthma.
+        if ignore_asthma == True and class_ == 'asthma':
+            print('Ignoring class=asthma.')
+            continue
+
+        # Adding targets right here and not in the nested for loop below as we
+        # are iterating classwise anyway.
+        if class_ == 'covid':
+            valid_y.extend([1] * len(os.listdir(dir)))
+        elif class_ == 'asthma' or class_ == 'normal':
+            valid_y.extend([0] * len(os.listdir(dir)))
+
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
 
@@ -130,16 +179,35 @@ for audio_type in sorted(audio_types):
                 waveform, _ = load(file, sampling_rate, time_per_sample_cough)
 
             feature_matrix = generate_feature_matrix(waveform)
-            valid.append(feature_matrix)
+            valid_X.append(feature_matrix)
 
-    valid = np.array(valid)
-    np.save(dest_valid, valid)
+    valid_X = np.array(valid_X)
+    valid_y = np.array(valid_y)
 
-    print(f'Generating test.npy for audio_type={audio_type}...')
+    # Sanity check that number of samples in feature matrix and target vector
+    # are the same.
+    assert valid_X.shape[0] == valid_y.shape[0]
+
+    np.save(dest_valid_X, valid_X)
+    np.save(dest_valid_y, valid_y)
+
+    print(f'Generating test_X.npy and test_y for audio_type={audio_type}...')
     for i, dir in enumerate(sorted(os.listdir(source_test))):
         dir = os.path.join(source_test, dir)
         class_ = os.path.basename(dir)
 
+        # Ignoring class asthma.
+        if ignore_asthma == True and class_ == 'asthma':
+            print('Ignoring class=asthma.')
+            continue
+
+        # Adding targets right here and not in the nested for loop below as we
+        # are iterating classwise anyway.
+        if class_ == 'covid':
+            test_y.extend([1] * len(os.listdir(dir)))
+        elif class_ == 'asthma' or class_ == 'normal':
+            test_y.extend([0] * len(os.listdir(dir)))
+
         for file in tqdm(sorted(os.listdir(dir)), desc=f'class={class_}'):
             file = os.path.join(dir, file)
 
@@ -149,7 +217,14 @@ for audio_type in sorted(audio_types):
                 waveform, _ = load(file, sampling_rate, time_per_sample_cough)
 
             feature_matrix = generate_feature_matrix(waveform)
-            test.append(feature_matrix)
+            test_X.append(feature_matrix)
 
-    test = np.array(test)
-    np.save(dest_test, test)
+    test_X = np.array(test_X)
+    test_y = np.array(test_y)
+
+    # Sanity check that number of samples in feature matrix and target vector
+    # are the same.
+    assert valid_X.shape[0] == valid_y.shape[0]
+
+    np.save(dest_test_X, test_X)
+    np.save(dest_test_y, test_y)
