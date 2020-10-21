@@ -6,7 +6,7 @@ The data has not been uploaded to this repository.
 It has been acquired through an academic license from the University of Cambridge.
 Refer [this](https://covid-19-sounds.org/en/blog/data_sharing.html) link for instructions on licensing their data.
 
-Once you have downloaded the dataset, move it to the `./data` directory. Then unzip all the zip files in the directory.
+Once you have downloaded the dataset, move it to the `./data_raw` directory. Then unzip all the zip files in the directory.
 
 Run any of the following commands, depending on what data you want to generate:
 * `make all`: Generates everything that is required. If you are unsure of which option to use, use this, or just run `make`.  
