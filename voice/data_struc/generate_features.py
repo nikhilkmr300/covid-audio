@@ -89,7 +89,7 @@ def generate_feature_row(orig_df, filename, class_, waveform, sampling_rate, sam
                 continue
 
         elif feature == 'target':
-            row_df[filename, feature] = class_
+            row_df.loc[filename, feature] = class_
 
         # Global features.
         else:
@@ -125,6 +125,7 @@ def add_is_cough_symptom(filename):
         print('Make sure the filename convention is followed.')
         sys.exit(1)
 
+# Not used. Adding target handled in generate_feature_row.
 def add_target(filename):
     """ Returns the target class, using the filename (index of the dataframe). """
 
