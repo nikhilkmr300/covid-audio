@@ -1,4 +1,5 @@
 __pycache__
+.ipynb_checkpoints
 data_raw/KDD_paper_data
 data_raw/data_*
 data_rnn/data_*
